@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <curl/curl.h>
+#include <time.h>
 
 struct memory {
   char *response;
@@ -49,6 +50,7 @@ int main(void){
   fscanf(fp,"%s",token);
   fclose(fp);
 
+
   CURLcode res;
   CURL *curl = curl_easy_init();
   struct memory chunk = {0};
@@ -58,6 +60,7 @@ int main(void){
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 
     while(1){
+
    if(chunk.response){
      free(chunk.response);
      chunk.response = NULL;
@@ -83,13 +86,21 @@ int main(void){
     
     if(from_flag != NULL){
         guardar_cadena(from_flag, "\"first_name\":",mensaje_de,sizeof(mensaje_de));
+        guardar_cadena(chunk.response,"\"text\":",mensaje,sizeof(mensaje));
+        time_t t = time(NULL);
+        struct tm *tiempoActual = localtime(&t);
+        FILE *fj = fopen("historial.json","a");
+        if (fj == NULL)
+            printf("Error con el historial");
+        else{
+        fprintf(fj,"[%d:%d:%d]%s envió: %s\n",tiempoActual->tm_hour
+        ,tiempoActual->tm_min,tiempoActual->tm_hour,mensaje_de,mensaje);
+        fclose(fj);
+        }
     }
-
-    guardar_cadena(chunk.response,"\"text\":",mensaje,sizeof(mensaje));
 
     if(update_id == 0 || chat_id == 0) {
         printf("%s\n",chunk.response);
-        sleep(2);
         continue;
     }
 
@@ -109,6 +120,16 @@ int main(void){
             sleep(2);
             continue;
         }
+        time_t t = time(NULL);
+        struct tm *tiempoActual = localtime(&t);
+        FILE *fj = fopen("historial.json","a");
+        if (fj == NULL)
+            printf("Error con el historial");
+        else{
+        fprintf(fj,"[%d:%d:%d]el bot envió: Hola %s\n",tiempoActual->tm_hour
+        ,tiempoActual->tm_min,tiempoActual->tm_hour,mensaje_de);
+        fclose(fj);
+        }
     }
     if(strcmp(mensaje,"chau") == 0 || strcmp(mensaje,"adios") == 0){
         const char *urlSendMessage =  "/sendMessage?chat_id=";
@@ -123,6 +144,16 @@ int main(void){
             printf("Error Código: %d\n",res);
             sleep(2);
             continue;
+        }
+        time_t t = time(NULL);
+        struct tm *tiempoActual = localtime(&t);
+        FILE *fj = fopen("historial.json","a");
+        if (fj == NULL)
+            printf("Error con el historial");
+        else{
+        fprintf(fj,"[%d:%d:%d]el bot envió: Hasta luego %s\n",tiempoActual->tm_hour
+        ,tiempoActual->tm_min,tiempoActual->tm_hour,mensaje_de);
+        fclose(fj);
         }
     }
     offset = update_id + 1; 
